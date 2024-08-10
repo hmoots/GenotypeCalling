@@ -1,0 +1,190 @@
+#Description: Call pseduhaploid genotypes in eigentrat or plink format from .bam files using sequenceTools. 
+#This tool runs very quickly and ran in less that 15 minutes on all the data from an entire novaSeq S4 flowcell, 
+#using the 1240K snp set, but you can modify input files as need be.
+
+#SequenceTools GitHub: https://github.com/stschiff/sequenceTools
+
+# enter interactive session (or use a pbs script)
+qsub -I -l walltime=10:00:00 -l nodes=1:ppn=12 -l mem=32gb
+
+# change directory to where you will be working
+cd /gpfs/data/noli/genotype_calling
+
+# load software packages
+ml gcc/12.1.0 
+ml gsl/2.7.1 
+ml openblas 
+ml samtools/1.17 
+ml bcftools/1.17 
+ml htslib
+
+#anatomy of a mpileup command
+samtools mpileup [-EB] [-C capQcoef] [-r reg] [-f in.fa] [-l list] [-Q minBaseQ] [-q minMapQ] in.bam [in2.bam [...]]
+
+#to run on a single .bam file
+samtools mpileup -R -B -q30 -Q20 -l snp_list -f human_g1k_v37.fasta /gpfs/data/raghavan-lab/data/internal/Noli/bam/UC005_E1L1P1.bwa.Q30F4.srt.rmdup.realn.md.bam  > pileup.txt
+
+samtools mpileup -R -B -q30 -Q20 -l /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/snp_list -f /gpfs/data/raghavan-lab/external_public/hs37d5/hs37d5.fa /gpfs/data/raghavan-lab/data/internal/Noli/bam/merged_trimmed/UC010_L1Trimmed.bam > pileup.txt
+
+/gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames UC005 --samplePopName Noli -f v44.3_1240K_public.snp_XY -e Noli_UC0010 < pileup.txt
+
+/gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames UC010 --samplePopName Noli -f /gpfs/data/raghavan-lab/users_projects/hmoots/data/AADR/1240K/v54/v54.1_1240K_public.snp -e Noli_UC0010 < pileup.txt
+
+
+#to loop over multiple bam files
+data_dir="/gpfs/data/raghavan-lab/data/internal/Noli/bam/merged_trimmed/"
+eig_out_root="/gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54"
+bam_files=$(ls ${data_dir}*bam)
+
+#to loop over multiple bam files
+data_dir="/gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling"
+eig_out_root="${data_dir}/Noli_Jan_2024"
+bam_files=$(ls ${data_dir}/bams/*bam)
+
+#to loop over multiple bam files
+data_dir="/gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling"
+eig_out_root="${data_dir}/Noli_Jan_2024/v4_lowcov/"
+bam_files=$(ls ${data_dir}/bams/lowcov/*bam)
+
+sample_names=""
+
+# Get sample names and the file names from the bam filepath to use in your script
+
+for f in $bam_files; do
+        sample_id=$(basename $f | cut -f1 -d "_")
+        #sample_id=$(echo $f | cut -f12 -d "/" | cut -f2 -d "_")
+        if [ "$sample_names" = "" ]; then
+                sample_names=$sample_id
+        else
+                sample_names=${sample_names}","$sample_id
+        fi
+                
+done
+
+echo $sample_names
+
+samtools mpileup -R -B -q30 -Q20 -l /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/snp_list -f /gpfs/data/raghavan-lab/external_public/hs37d5/hs37d5.fa $bam_files > pileup.txt
+
+/gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames $sample_names --samplePopName Noli -f /gpfs/data/raghavan-lab/users_projects/hmoots/data/AADR/1240K/v54/v54.1_1240K_public.snp -e Noli_lowcov < pileup.txt 
+
+/gpfs/data/raghavan-lab/users_projects/hmoots/data/AADR/1240K/v54
+
+# merge the output of the genotype calling with other datasets (AADR used as example below)
+
+# Documentation for mergeit: https://github.com/argriffing/eigensoft/blob/master/CONVERTF/README
+
+ml gcc/12.1.0
+ml intel/2022.2
+ml llvm/14.0.5
+ml eigensoft/8.0.0
+
+#merges live here
+/gpfs/data/raghavan-lab/data/internal/Noli/merged/
+
+####################################################################################################### attempt #2
+#cat <<EOT>> parMerge
+DIR: /gpfs/data/raghavan-lab/users_projects/hmoots/data/AADR/1240K/v54
+
+geno1: DIR/v54.1_1240K_public.geno
+snp1:  DIR/v54.1_1240K_public.snp
+ind1:  DIR/v54.1_1240K_public.ind
+geno2: /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54/Noli_UC0010.geno
+snp2:  /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54/Noli_UC0010.snp
+ind2:  /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54/Noli_UC0010.ind
+genooutfilename:   Noli_aadr_merge_1240K_snps.geno
+snpoutfilename:    Noli_aadr_merge_1240K_snps.snp
+indoutfilename:    Noli_aadr_merge_1240K_snps.ind
+hashcheck: NO
+EOT
+
+##########
+#to run
+mergeit -p parMerge
+
+
+
+
+####################################################################################################### attempt #2
+#cat <<EOT>> parMerge
+DIR: /gpfs/data/raghavan-lab/users_projects/hmoots/data/AADR/HO/v54
+
+geno1: DIR/v54.1.p1_HO_public.geno
+snp1:  DIR/v54.1.p1_HO_public.snp
+ind1:  DIR/v54.1.p1_HO_public.ind
+geno2: /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v2/Noli.geno
+snp2:  /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v2/Noli.snp
+ind2:  /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v2/Noli.ind
+genooutfilename:   Noli_aadr_merge_HO_snps.geno
+snpoutfilename:    Noli_aadr_merge_HO_snps.snp
+indoutfilename:    Noli_aadr_merge_HO_snps.ind
+hashcheck: NO
+EOT
+
+##########
+#to run
+mergeit -p parMerge
+
+####################################################################################################### 
+####################################################################################################### 
+####################################################################################################### 
+####################################################################################################### 
+####################################################################################################### 
+####################################################################################################### 
+
+#!/bin/bash
+
+#PBS -S /bin/bash
+#PBS -l walltime=48:59:00
+#PBS -l nodes=1:ppn=12
+#PBS -l mem=50gb
+#PBS -o ./Suila_pileUp.out
+#PBS -e ./Suila_pileUp.err
+
+ml gcc
+module load bcftools/1.6.0
+module load samtools
+module load htslib
+
+cd $PBS_O_WORKDIR
+
+bindir="/gpfs/data/raghavan-lab/bin"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${bindir}"/glibc214/glibc-2.14/build"
+
+#Mention the arguements
+ref="/gpfs/data/raghavan-lab/external_public/hs37d5/hs37d5.fa"
+input="SUI001.WGS.mapped.rmdup.q30.10bptrim.bam"
+positions="list.txt" #should have the column chr and positions
+dir="/gpfs/data/raghavan-lab/bin/pileupCaller-linux"
+snp="GA.HGDP.KGP_anc-Ahom.no2nd.norel.snp"
+
+#Step 1 and 2: Running samtools mpileup and pileUpCaller: 
+
+samtools mpileup -R -B -q30 -Q20 -l "${positions}" -f "${ref}" "${input}" | \
+/gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames Suila -f "${snp}" -e Suila_10bp_pileUp
+
+#################################################
+ssh hmoots@gardner.cri.uchicago.edu
+
+qsub -I -l walltime=10:00:00 -l nodes=1:ppn=12 -l mem=32gb
+
+cd /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling
+
+ml gcc
+module load bcftools/1.6.0
+module load samtools
+module load htslib
+
+bindir="/gpfs/data/raghavan-lab/bin"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${bindir}"/glibc214/glibc-2.14/build"
+
+samtools mpileup -R -B -q30 -Q30 -l snp_list -f human_g1k_v37.fasta /gpfs/data/raghavan-lab/data/internal/Noli/bam/UC005_E1L1P1.bwa.Q30F4.srt.rmdup.realn.md.bam  > pileup.txt
+/gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames UC005 --samplePopName Noli -f v44.3_1240K_public.snp_XY -e Noli_UC005 < pileup.txt
+
+ml gcc
+module load bcftools/1.6.0
+module load samtools
+module load htslib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/gpfs/data/raghavan-lab/bin/glibc214/glibc-2.14/build"
+
+samtools mpileup -R -B -q30 -Q30 -l snp_list -f human_g1k_v37.fasta /gpfs/data/raghavan-lab/data/internal/Noli/bam/UC005_E1L1P1.bwa.Q30F4.srt.rmdup.realn.md.bam  > pileup.txt
+/gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames UC005 --samplePopName Noli -f v44.3_1240K_public.snp_XY -e Noli_UC005 < pileup.txt
