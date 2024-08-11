@@ -1,14 +1,11 @@
-#Description: Call pseduhaploid genotypes in eigentrat or plink format from .bam files using sequenceTools. 
-#This tool runs very quickly and ran in less that 15 minutes on all the data from an entire novaSeq S4 flowcell, 
-#using the 1240K snp set, but you can modify input files as need be.
-
+#Description: Call pseudohaploid genotypes in eigenstrat or plink format from .bam files using sequenceTools. 
 #SequenceTools GitHub: https://github.com/stschiff/sequenceTools
 
-# enter interactive session (or use a pbs script)
+# enter an interactive session (or use pbs script)
 qsub -I -l walltime=10:00:00 -l nodes=1:ppn=12 -l mem=32gb
 
 # change directory to where you will be working
-cd /gpfs/data/noli/genotype_calling
+cd /your/file/path/genotype_calling
 
 # load software packages
 ml gcc/12.1.0 
@@ -18,13 +15,14 @@ ml samtools/1.17
 ml bcftools/1.17 
 ml htslib
 
-#anatomy of a mpileup command
+#run samtools mpileup (https://www.htslib.org/doc/samtools-mpileup.html)
+#mpileup command anatomy
 samtools mpileup [-EB] [-C capQcoef] [-r reg] [-f in.fa] [-l list] [-Q minBaseQ] [-q minMapQ] in.bam [in2.bam [...]]
 
 #to run on a single .bam file
-samtools mpileup -R -B -q30 -Q20 -l snp_list -f human_g1k_v37.fasta /gpfs/data/raghavan-lab/data/internal/Noli/bam/UC005_E1L1P1.bwa.Q30F4.srt.rmdup.realn.md.bam  > pileup.txt
+samtools mpileup -R -B -q30 -Q20 -l snp_list -f human_g1k_v37.fasta /your/file/path/data/name.bam  > pileup.txt
 
-samtools mpileup -R -B -q30 -Q20 -l /gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/snp_list -f /gpfs/data/raghavan-lab/external_public/hs37d5/hs37d5.fa /gpfs/data/raghavan-lab/data/internal/Noli/bam/merged_trimmed/UC010_L1Trimmed.bam > pileup.txt
+samtools mpileup -R -B -q30 -Q20 -l /your/file/path/analyses/genotypecalling/snp_list -f /your/file/path/hs37d5/hs37d5.fa /gpfs/data/raghavan-lab/data/internal/Noli/bam/merged_trimmed/UC010_L1Trimmed.bam > pileup.txt
 
 /gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames UC005 --samplePopName Noli -f v44.3_1240K_public.snp_XY -e Noli_UC0010 < pileup.txt
 
