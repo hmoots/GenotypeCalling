@@ -22,14 +22,15 @@ samtools mpileup [-EB] [-C capQcoef] [-r reg] [-f in.fa] [-l list] [-Q minBaseQ]
 #to run on a single .bam file
 samtools mpileup -R -B -q30 -Q20 -l snp_list -f human_g1k_v37.fasta /your/file/path/data/name.bam  > pileup.txt
 
-samtools mpileup -R -B -q30 -Q20 -l /your/file/path/analyses/genotypecalling/snp_list -f /your/file/path/hs37d5/hs37d5.fa /gpfs/data/raghavan-lab/data/internal/Noli/bam/merged_trimmed/UC010_L1Trimmed.bam > pileup.txt
+samtools mpileup -R -B -q30 -Q20 -l /your/file/path/analyses/genotypecalling/snp_list -f /your/file/path/hs37d5/hs37d5.fa /your/file/path/data/internal/Noli/bam/merged_trimmed/UC010_L1Trimmed.bam > pileup.txt
 
 /gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames UC005 --samplePopName Noli -f v44.3_1240K_public.snp_XY -e Noli_UC0010 < pileup.txt
 
-/gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames UC010 --samplePopName Noli -f /gpfs/data/raghavan-lab/users_projects/hmoots/data/AADR/1240K/v54/v54.1_1240K_public.snp -e Noli_UC0010 < pileup.txt
+/gpfs/data/raghavan-lab/bin/pileupCaller-linux --randomHaploid --sampleNames UC010 --samplePopName Noli -f /your/file/path/data/AADR/1240K/v54/v54.1_1240K_public.snp -e Noli_UC0010 < pileup.txt
 
 
 #to loop over multiple bam files
+data_dir="/your/file/path/data/" #example
 data_dir="/gpfs/data/raghavan-lab/data/internal/Noli/bam/merged_trimmed/"
 eig_out_root="/gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54"
 bam_files=$(ls ${data_dir}*bam)
@@ -79,7 +80,7 @@ ml eigensoft/8.0.0
 #merges live here
 /gpfs/data/raghavan-lab/data/internal/Noli/merged/
 
-####################################################################################################### attempt #2
+#######################################################################################################
 #cat <<EOT>> parMerge
 DIR: /gpfs/data/raghavan-lab/users_projects/hmoots/data/AADR/1240K/v54
 
@@ -102,7 +103,7 @@ mergeit -p parMerge
 
 
 
-####################################################################################################### attempt #2
+####################################################################################################### 
 #cat <<EOT>> parMerge
 DIR: /gpfs/data/raghavan-lab/users_projects/hmoots/data/AADR/HO/v54
 
