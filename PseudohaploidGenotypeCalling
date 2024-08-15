@@ -32,11 +32,6 @@ samtools mpileup -R -B -q30 -Q20 -l /your/file/path/analyses/genotypecalling/snp
 #to loop over multiple bam files
 data_dir="/your/file/path/data/" #example
 data_dir="/gpfs/data/raghavan-lab/data/internal/Noli/bam/merged_trimmed/"
-eig_out_root="/gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54"
-bam_files=$(ls ${data_dir}*bam)
-
-#to loop over multiple bam files
-data_dir="/gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling"
 eig_out_root="${data_dir}/Noli_Jan_2024"
 bam_files=$(ls ${data_dir}/bams/*bam)
 
@@ -44,6 +39,7 @@ bam_files=$(ls ${data_dir}/bams/*bam)
 data_dir="/gpfs/data/raghavan-lab/users_projects/hmoots/analyses/genotypecalling"
 eig_out_root="${data_dir}/Noli_Jan_2024/v4_lowcov/"
 bam_files=$(ls ${data_dir}/bams/lowcov/*bam)
+
 
 sample_names=""
 
