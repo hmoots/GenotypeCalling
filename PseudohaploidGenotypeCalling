@@ -21,25 +21,12 @@ samtools mpileup [-EB] [-C capQcoef] [-r reg] [-f in.fa] [-l list] [-Q minBaseQ]
 
 #to run on a single .bam file
 samtools mpileup -R -B -q30 -Q20 -l snp_list -f human_g1k_v37.fasta /your/file/path/data/name.bam  > pileup.txt
-
-samtools mpileup -R -B -q30 -Q20 -l /your/file/path/analyses/genotypecalling/snp_list -f /your/file/path/hs37d5/hs37d5.fa /your/file/path/data/internal/Noli/bam/merged_trimmed/UC010_L1Trimmed.bam > pileup.txt
-
-pileupCaller-linux --randomHaploid --sampleNames UC005 --samplePopName Noli -f v44.3_1240K_public.snp_XY -e Noli_UC0010 < pileup.txt
-
-pileupCaller-linux --randomHaploid --sampleNames UC010 --samplePopName Noli -f /your/file/path/data/AADR/1240K/v54/v54.1_1240K_public.snp -e Noli_UC0010 < pileup.txt
-
+pileupCaller-linux --randomHaploid --sampleNames [ID##] --samplePopName [Site_ID] -f snp_list -e [file_name] < pileup.txt
 
 #to loop over multiple bam files
-data_dir="/your/file/path/data/" #example
-data_dir="/your/file/path/bam/merged_trimmed/"
-eig_out_root="${data_dir}/Noli_Jan_2024"
+data_dir="/your/file/path/data_directory/"
+eig_out_root="${data_dir}/pseudohaploid"
 bam_files=$(ls ${data_dir}/bams/*bam)
-
-#to loop over multiple bam files
-data_dir="/your/file/path/users_projects/hmoots/analyses/genotypecalling"
-eig_out_root="${data_dir}/Noli_Jan_2024/v4_lowcov/"
-bam_files=$(ls ${data_dir}/bams/lowcov/*bam)
-
 
 sample_names=""
 
@@ -58,11 +45,9 @@ done
 
 echo $sample_names
 
-samtools mpileup -R -B -q30 -Q20 -l /your/file/path/users_projects/hmoots/analyses/genotypecalling/snp_list -f /your/file/path/external_public/hs37d5/hs37d5.fa $bam_files > pileup.txt
+samtools mpileup -R -B -q30 -Q20 -l /your/file/path/snp_list -f /your/file/path/hs37d5/hs37d5.fa $bam_files > pileup.txt
 
-/your/file/path/bin/pileupCaller-linux --randomHaploid --sampleNames $sample_names --samplePopName Noli -f /your/file/path/users_projects/hmoots/data/AADR/1240K/v54/v54.1_1240K_public.snp -e Noli_lowcov < pileup.txt 
-
-/your/file/path/users_projects/hmoots/data/AADR/1240K/v54
+/your/file/path/bin/pileupCaller-linux --randomHaploid --sampleNames $sample_names --samplePopName [Site_ID] -f /your/file/path/snp_list -e [file_name] < pileup.txt 
 
 # merge the output of the genotype calling with other datasets (AADR used as example below)
 
@@ -72,9 +57,6 @@ ml gcc/12.1.0
 ml intel/2022.2
 ml llvm/14.0.5
 ml eigensoft/8.0.0
-
-#merges live here
-/your/file/path/data/internal/Noli/merged/
 
 #######################################################################################################
 #cat <<EOT>> parMerge
@@ -95,7 +77,6 @@ EOT
 ##########
 #to run
 mergeit -p parMerge
-
 
 
 
@@ -126,43 +107,8 @@ mergeit -p parMerge
 ####################################################################################################### 
 ####################################################################################################### 
 
-#!/bin/bash
-
-#PBS -S /bin/bash
-#PBS -l walltime=48:59:00
-#PBS -l nodes=1:ppn=12
-#PBS -l mem=50gb
-#PBS -o ./Suila_pileUp.out
-#PBS -e ./Suila_pileUp.err
-
-ml gcc
-module load bcftools/1.6.0
-module load samtools
-module load htslib
-
-cd $PBS_O_WORKDIR
-
-bindir="/your/file/path/bin"
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${bindir}"/glibc214/glibc-2.14/build"
-
-#Mention the arguements
-ref="/your/file/path/external_public/hs37d5/hs37d5.fa"
-input="SUI001.WGS.mapped.rmdup.q30.10bptrim.bam"
-positions="list.txt" #should have the column chr and positions
-dir="/your/file/path/bin/pileupCaller-linux"
-snp="GA.HGDP.KGP_anc-Ahom.no2nd.norel.snp"
-
-#Step 1 and 2: Running samtools mpileup and pileUpCaller: 
-
-samtools mpileup -R -B -q30 -Q20 -l "${positions}" -f "${ref}" "${input}" | \
-/your/file/path/bin/pileupCaller-linux --randomHaploid --sampleNames Suila -f "${snp}" -e Suila_10bp_pileUp
-
-#################################################
-ssh hmoots@gardner.cri.uchicago.edu
-
 qsub -I -l walltime=10:00:00 -l nodes=1:ppn=12 -l mem=32gb
-
-cd /your/file/path/users_projects/hmoots/analyses/genotypecalling
+cd /your/file/path/users_projects/analyses/genotypecalling
 
 ml gcc
 module load bcftools/1.6.0
