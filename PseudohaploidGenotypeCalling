@@ -27,10 +27,7 @@ pileupCaller-linux --randomHaploid --sampleNames [ID##] --samplePopName [Site_ID
 data_dir="/your/file/path/data_directory/"
 eig_out_root="${data_dir}/pseudohaploid"
 bam_files=$(ls ${data_dir}/bams/*bam)
-
 sample_names=""
-
-# Get sample names and the file names from the bam filepath to use in your script
 
 for f in $bam_files; do
         sample_id=$(basename $f | cut -f1 -d "_")
@@ -43,6 +40,7 @@ for f in $bam_files; do
                 
 done
 
+# to check the list of sample names 
 echo $sample_names
 
 samtools mpileup -R -B -q30 -Q20 -l /your/file/path/snp_list -f /your/file/path/hs37d5/hs37d5.fa $bam_files > pileup.txt
@@ -50,7 +48,6 @@ samtools mpileup -R -B -q30 -Q20 -l /your/file/path/snp_list -f /your/file/path/
 /your/file/path/bin/pileupCaller-linux --randomHaploid --sampleNames $sample_names --samplePopName [Site_ID] -f /your/file/path/snp_list -e [file_name] < pileup.txt 
 
 # merge the output of the genotype calling with other datasets (AADR used as example below)
-
 # Documentation for mergeit: https://github.com/argriffing/eigensoft/blob/master/CONVERTF/README
 
 ml gcc/12.1.0
@@ -60,17 +57,17 @@ ml eigensoft/8.0.0
 
 #######################################################################################################
 #cat <<EOT>> parMerge
-DIR: /your/file/path/users_projects/hmoots/data/AADR/1240K/v54
+DIR: /your/file/path/data/AADR/1240K/v54
 
 geno1: DIR/v54.1_1240K_public.geno
 snp1:  DIR/v54.1_1240K_public.snp
 ind1:  DIR/v54.1_1240K_public.ind
-geno2: /your/file/path/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54/Noli_UC0010.geno
-snp2:  /your/file/path/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54/Noli_UC0010.snp
-ind2:  /your/file/path/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v3_aadrv54/Noli_UC0010.ind
-genooutfilename:   Noli_aadr_merge_1240K_snps.geno
-snpoutfilename:    Noli_aadr_merge_1240K_snps.snp
-indoutfilename:    Noli_aadr_merge_1240K_snps.ind
+geno2: /your/file/path/users_projects/hmoots/analyses/genotypecalling/output.geno
+snp2:  /your/file/path/users_projects/hmoots/analyses/genotypecalling/output.snp
+ind2:  /your/file/path/users_projects/hmoots/analyses/genotypecalling/output.ind
+genooutfilename:   output_plus_aadr_merge_1240K_snps.geno
+snpoutfilename:    output_plus_aadr_merge_1240K_snps.snp
+indoutfilename:    output_plus_aadr_merge_1240K_snps.ind
 hashcheck: NO
 EOT
 
@@ -87,12 +84,12 @@ DIR: /your/file/path/users_projects/hmoots/data/AADR/HO/v54
 geno1: DIR/v54.1.p1_HO_public.geno
 snp1:  DIR/v54.1.p1_HO_public.snp
 ind1:  DIR/v54.1.p1_HO_public.ind
-geno2: /your/file/path/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v2/Noli.geno
-snp2:  /your/file/path/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v2/Noli.snp
-ind2:  /your/file/path/users_projects/hmoots/analyses/genotypecalling/Noli_Jan_2024/v2/Noli.ind
-genooutfilename:   Noli_aadr_merge_HO_snps.geno
-snpoutfilename:    Noli_aadr_merge_HO_snps.snp
-indoutfilename:    Noli_aadr_merge_HO_snps.ind
+geno2: /your/file/path/users_projects/hmoots/analyses/genotypecalling/output.geno
+snp2:  /your/file/path/users_projects/hmoots/analyses/genotypecalling/output.snp
+ind2:  /your/file/path/users_projects/hmoots/analyses/genotypecalling/output.ind
+genooutfilename:   output_plus_aadr_merge_HO_snps.geno
+snpoutfilename:    output_plus_aadr_merge_HO_snps.snp
+indoutfilename:    output_plus_aadr_merge_HO_snps.ind
 hashcheck: NO
 EOT
 
@@ -118,14 +115,5 @@ module load htslib
 bindir="/your/file/path/bin"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${bindir}"/glibc214/glibc-2.14/build"
 
-samtools mpileup -R -B -q30 -Q30 -l snp_list -f human_g1k_v37.fasta /your/file/path/data/internal/Noli/bam/UC005_E1L1P1.bwa.Q30F4.srt.rmdup.realn.md.bam  > pileup.txt
-/your/file/path/bin/pileupCaller-linux --randomHaploid --sampleNames UC005 --samplePopName Noli -f v44.3_1240K_public.snp_XY -e Noli_UC005 < pileup.txt
-
-ml gcc
-module load bcftools/1.6.0
-module load samtools
-module load htslib
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"/your/file/path/bin/glibc214/glibc-2.14/build"
-
-samtools mpileup -R -B -q30 -Q30 -l snp_list -f human_g1k_v37.fasta /your/file/path/data/internal/Noli/bam/UC005_E1L1P1.bwa.Q30F4.srt.rmdup.realn.md.bam  > pileup.txt
-/your/file/path/bin/pileupCaller-linux --randomHaploid --sampleNames UC005 --samplePopName Noli -f v44.3_1240K_public.snp_XY -e Noli_UC005 < pileup.txt
+samtools mpileup -R -B -q30 -Q20 -l /your/file/path/snp_list -f /your/file/path/hs37d5/hs37d5.fa $bam_files > pileup.txt
+/your/file/path/bin/pileupCaller-linux --randomHaploid --sampleNames $sample_names --samplePopName [Site_ID] -f /your/file/path/snp_list -e [file_name] < pileup.txt 
