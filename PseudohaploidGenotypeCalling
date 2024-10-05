@@ -1,5 +1,5 @@
-#Description: Call pseudohaploid genotypes in eigenstrat or plink format from .bam files using sequenceTools. 
-#SequenceTools GitHub: https://github.com/stschiff/sequenceTools
+# Description: Call pseudohaploid genotypes in eigenstrat or plink format from .bam files using sequenceTools. 
+# SequenceTools GitHub: https://github.com/stschiff/sequenceTools
 
 # enter an interactive session (or use pbs script)
 qsub -I -l walltime=10:00:00 -l nodes=1:ppn=12 -l mem=32gb
@@ -15,15 +15,15 @@ ml samtools/1.17
 ml bcftools/1.17 
 ml htslib
 
-#run samtools mpileup (https://www.htslib.org/doc/samtools-mpileup.html)
-#mpileup command anatomy
+# run samtools mpileup (https://www.htslib.org/doc/samtools-mpileup.html)
+# mpileup command anatomy
 samtools mpileup [-EB] [-C capQcoef] [-r reg] [-f in.fa] [-l list] [-Q minBaseQ] [-q minMapQ] in.bam [in2.bam [...]]
 
-#to run on a single .bam file
+# to run on a single .bam file
 samtools mpileup -R -B -q30 -Q20 -l snp_list -f human_g1k_v37.fasta /your/file/path/data/name.bam  > pileup.txt
 pileupCaller-linux --randomHaploid --sampleNames [ID##] --samplePopName [Site_ID] -f snp_list -e [file_name] < pileup.txt
 
-#to loop over multiple bam files
+# to loop over multiple bam files
 data_dir="/your/file/path/data_directory/"
 eig_out_root="${data_dir}/pseudohaploid"
 bam_files=$(ls ${data_dir}/bams/*bam)
